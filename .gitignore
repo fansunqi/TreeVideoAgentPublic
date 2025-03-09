@@ -1,0 +1,8 @@
+data/
+.DS_Store
+results/egoschema/qa_by_summary
+results/egoschema/summary
+cache/
+tva_env/
+__pycache__
+eval/__pycache__
