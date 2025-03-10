@@ -2,11 +2,11 @@
 
 ## News and Todo🗓️
 
-\- [x] Release Code for Demo
+- [x] Release Code for Demo
 
-\- [ ] Release Code for EgoSchema
+- [ ] Release Code for EgoSchema
 
-\- [ ] Release Code for NExT-QA
+- [ ] Release Code for NExT-QA
 
 ## 引入
 
