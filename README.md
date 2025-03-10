@@ -1,6 +1,12 @@
-# 🌲TreeVideoAgent
+# 🌲TreeVideoAgentPublic
 
-*Separating the Wheat from the Chaff*: Agentic Keyframe Search for Long-Form Video Understanding
+## News and Todo🗓️
+
+\- [x] Release Code for Demo
+
+\- [ ] Release Code for EgoSchema
+
+\- [ ] Release Code for NExT-QA
 
 ## 引入
 
