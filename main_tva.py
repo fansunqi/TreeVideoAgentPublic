@@ -27,9 +27,8 @@ timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 logger_path = global_args.logger_path
 logger = set_logger(timestamp, logger_path)
 
-# TODO 之后从环境变量中找 api_keys 与 base_url
-api_key = "sk-lAWdJVGgMJikTuhW2PBIgwecI6Gwg0gdM3xKVxwYDiOW98ra"
-base_url = "https://api.juheai.top/v1/"
+api_key = os.getenv("OPENAI_API_KEY")
+base_url = os.getenv("OPENAI_BASE_URL")
 
 # TODO 之后挪到 main 函数中去
 summarizer = GPT(api_key=api_key, model_name=global_args.model_name, temperature=global_args.temperature, base_url=base_url)
@@ -39,7 +38,6 @@ self_evaluator = GPT(api_key=api_key, model_name=global_args.model_name, tempera
 
 
 # TODO: 使用 promptFactory
-
 def bfs_select_segments(question, caption, num_frames, segment_des, use_cache=True):
     formatted_description = {
         "frame_descriptions": [
