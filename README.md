@@ -8,6 +8,69 @@
 
 - [ ] Release Code for NExT-QA
 
+## Setup and Configuration 🛠️
+
+***
+
+- **Python Version**: Python 3.9 or newer installed on your system.
+
+- **API Keys**: Obtain API keys from one or more of the following services:
+
+  - OpenAI (for access to models like GPT-3.5)
+  - Google Cloud (for access to models like OCR)
+  - Google Search (for access to search online)
+
+- **Python Dependencies**: Install all necessary Python libraries as specified in the `requirements.txt` file. You can install these dependencies using the following command:
+
+  ```python
+  pip install -r requirements.txt
+  ```
+
+- **Other Model Choice**: You have the option to use models from Hugging Face's Transformers library. Ensure you have the necessary credentials to use and download the model.
+
+### Installation Steps
+
+1. Clone the repository 📦:
+
+   ```python
+   git clone https://github.com/z-x-yang/DoraemonGPT.git
+   ```
+
+2. Opt for a virtual environment 🧹 and install the dependencies 🧑‍🍳:
+
+   ```python
+   pip install -r requirements.txt
+   ```
+
+3. Set up your API key 🗝️:
+
+   - Fill in config/inference/inference.yaml with your keys:
+
+     ```python
+     openai:
+       GPT_API_KEY: ["put your openai key here", ...]
+     
+     google_cloud:
+       CLOUD_VISION_API_KEY: [...]
+       QUOTA_PROJECT_ID: [...]
+     ```
+
+***
+
+## QuickStart 🚀
+
+- Fill in config/demo.yaml with your video and question:
+
+  ```python
+  # run
+  cd ..                  
+  python ./scripts/demo_test.py --config config/demo_2.yaml  
+  ```
+
+***
+
+## 
+
 ## 引入
 
 **Video Agent 的概念**：用于视频理解、视频分析的智能体，具备下图所示智能体的基本要素。
