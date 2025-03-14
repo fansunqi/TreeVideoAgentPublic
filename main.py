@@ -3,7 +3,6 @@ import json
 import pdb
 import numpy as np
 from openai import OpenAI
-import openai
 from tqdm import tqdm
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
@@ -14,9 +13,6 @@ from tools.summarizer import summarize_one_video, \
       qa_one_video_by_summary, postprocess_response_dict
 # from tools.utils_clip import get_embeddings, frame_retrieval_seg_ego
 from video_seg import *
-import matplotlib
-import matplotlib.pyplot as plt
-import seaborn
 from arg_parser import parse_args
 
 global_args = parse_args()
@@ -610,7 +606,7 @@ def run_one_question(video_id, ann, caps, logs, args):
 
 def main(args):
 
-    output_result_file = os.path.join(args.output_base_path, f"ta_subset_{timestamp}.json")
+    output_result_file = os.path.join(args.output_base_path, f"{timestamp}.json")
 
     anns = json.load(open(args.anno_path, "r"))
     all_caps = json.load(open(args.data_path, "r"))
@@ -655,19 +651,36 @@ def main(args):
     json.dump(logs, open(output_result_file, "w"))
 
 
+def demo(args):
+
+    output_result_file = os.path.join(args.output_base_path, f"{timestamp}.json")
+
+    demo_info = json.load(open(args.demo_info_path, "r"))
+    anns = demo_info["anns"]
+    all_caps = demo_info["all_caps"]
+    
+    logs = {}
+    logger.info("process demo video...")
+                                                                                  
+    run_one_question("demo", anns, all_caps, logs, args)
+    json.dump(logs, open(output_result_file, "w"))
+
+
 if __name__ == "__main__":
     args = parse_args()
     logger.info(args)
-    main(args)
-    
-    print(args)
-    print(f"\ntimestamp: {timestamp}\n")
 
-    # eval
-    os.system(f"python3 -m eval.eval2 results/egoschema/ta/ta_subset_{timestamp}.json")
+    if args.dataset == 'demo':
+        demo(args)
 
-    # visualize
-    os.system(f"python3 visualize/get_ans_step.py --filename ta_subset_{timestamp}.json")
+    else:
+        main(args)
+        
+        print(args)
+        print(f"\ntimestamp: {timestamp}\n")
 
+        # eval
+        os.system(f"python3 -m eval.eval2 results/egoschema/ta/ta_subset_{timestamp}.json")
 
-# TODO 思考一下 online 怎么做
+        # visualize
+        os.system(f"python3 visualize/get_ans_step.py --filename ta_subset_{timestamp}.json")

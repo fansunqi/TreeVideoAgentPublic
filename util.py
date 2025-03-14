@@ -239,7 +239,7 @@ def save_to_cache(key, value, logger=None, use_logger=True):
 def set_logger(timestamp, logger_path):
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
-    logger_file_path = os.path.join(logger_path, f"ta_subset_{timestamp}.log")
+    logger_file_path = os.path.join(logger_path, f"{timestamp}.log")
     file_handler = logging.FileHandler(logger_file_path)
     formatter = logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s (line %(lineno)d)"

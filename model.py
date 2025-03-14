@@ -4,7 +4,6 @@ import pdb
 from pprint import pprint
 import time
 import json
-from together import Together
 from util import get_from_cache, save_to_cache
 
 LOG_MAX_LENGTH = 300
@@ -24,7 +23,7 @@ def get_model(args):
         model = GPT(args.api_key, model_name, temperature, base_url)
         return model
     else:
-        return TogetherAI(args.api_key, model_name, temperature, base_url)
+        raise KeyError(f"Model {model_name} not implemented")
 
 
 class Model(object):
@@ -144,57 +143,6 @@ class GPT(Model):
             else:
                 print("Cache Miss")
 
-            return self.post_process_fn(info['response']), info
-
-
-# TODO
-class TogetherAI(Model):
-    def __init__(self, api_key, model_name, temperature, base_url=None):
-        super().__init__()
-        self.model_name = model_name
-        self.temperature = temperature
-        self.client = Together(api_key=api_key)
-
-
-    def get_response(self, **kwargs):
-        try:
-            res = self.client.chat.completions.create(**kwargs)
-            return res
-        except:
-            print('APIConnectionError')
-            time.sleep(30)
-            return self.get_response(**kwargs)
-
-        
-    def forward(self, head, prompt):
-        # messages = [
-        #     {"role": "system", "content": head}
-        # ]
-        messages = []
-        info = {}
-
-        messages.append(
-            {"role": "user", "content": prompt}
-        )
-        response = self.get_response(
-            model=self.model_name,
-            messages=messages,
-            temperature=self.temperature,
-            # stream=True,
-        )
-
-        if response is None:
-            info['response'] = None
-            info['message'] = None
-            return None, info
-        else:
-            # NOTE
-            messages.append(
-                {"role": "assistant", "content": response.choices[0].message.content}
-            )
-            info = dict(response.usage)  # completion_tokens, prompt_tokens, total_tokens
-            info['response'] = messages[-1]["content"]
-            info['message'] = messages
             return self.post_process_fn(info['response']), info
 
 
