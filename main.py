@@ -1,8 +1,6 @@
 import os
 import json
 import pdb
-import numpy as np
-from openai import OpenAI
 from tqdm import tqdm
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
@@ -11,20 +9,21 @@ from model import GPT
 from arg_parser import parse_args
 from summarizer import summarize_one_video, \
       qa_one_video_by_summary, postprocess_response_dict
-# from tools.utils_clip import get_embeddings, frame_retrieval_seg_ego
 from video_seg import *
 from arg_parser import parse_args
 
+
+set_random_seed(42)
+
 global_args = parse_args()
 
-# 全局变量 logger 与 timestamp
-set_random_seed(42)
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-# logger_path = global_args.logger_path
 logger = set_logger(timestamp, global_args.logger_base_path)
+
 
 api_key = os.getenv("OPENAI_API_KEY")
 base_url = os.getenv("OPENAI_BASE_URL")
+
 
 with open(global_args.example_summary_path,'r') as ex:
     example_summary = ex.read()
@@ -32,14 +31,14 @@ with open(global_args.example_summary_path,'r') as ex:
 with open(global_args.example_qa_by_summary_path,'r') as ex:
     example_qa_by_summary = ex.read()
 
-# TODO 之后挪到 main 函数中去
+
 summarizer = GPT(api_key=api_key, model_name=global_args.model_name, temperature=global_args.temperature, base_url=base_url)
 qa_model = GPT(api_key=api_key, model_name=global_args.model_name, temperature=global_args.temperature, base_url=base_url)
 planner = GPT(api_key=api_key, model_name=global_args.model_name, temperature=global_args.temperature, base_url=base_url)
 self_evaluator = GPT(api_key=api_key, model_name=global_args.model_name, temperature=global_args.temperature, base_url=base_url)
 
 
-# TODO: 使用 promptFactory
+
 def bfs_select_segments(question, caption, num_frames, segment_des, use_cache=True):
     formatted_description = {
         "frame_descriptions": [
@@ -75,7 +74,7 @@ def bfs_select_segments(question, caption, num_frames, segment_des, use_cache=Tr
     return response
 
 
-# 启发代价函数 h(n)：衡量与终点的距离
+
 def gbfs_select_one_segment(question, caption, num_frames, segment_des, use_cache=True):
     formatted_description = {
         "frame_descriptions": [
@@ -108,14 +107,8 @@ def gbfs_select_one_segment(question, caption, num_frames, segment_des, use_cach
     return response
 
 
-# TODO: 搞一下 example，in-context learning
-# TODO Dij 也可以用 CLIP、视频段长度等现成工具来写移动代价函数
-# 移动代价函数 g(n)：衡量与起点的距离
-def dijkstra_select_one_segment(question, caption, num_frames, segment_des, use_cache=True):
-    # 一段一段分析某一段，值不值得分割。值得分割说明代价函数小，不值得分割说明代价函数大
-    # 这里的分析和目标（也就是问题）无关
 
-    # 下面这一段 Prompt 需要好好琢磨一下
+def dijkstra_select_one_segment(question, caption, num_frames, segment_des, use_cache=True):
     formatted_description = {
         "frame_descriptions": [
             {"segment_id": "1", "duration": "xxx - xxx", "description": "frame of xxx"}
@@ -142,8 +135,7 @@ def dijkstra_select_one_segment(question, caption, num_frames, segment_des, use_
     return response
 
 
-# 同时考虑两件事情的就是 A* 搜索
-# 代价函数 f(n) = 启发代价函数 h(n) + 移动代价函数 g(n)
+
 def a_star_select_one_segment(question, caption, num_frames, segment_des, use_cache=True):
     formatted_description = {
         "frame_descriptions": [
@@ -201,6 +193,7 @@ def self_eval(previous_prompt, answer, use_cache=True):
     return response
 
 
+
 def generate_answer_cot(question, caption, num_frames, use_cache=True):
     answer_format = {"final_answer": "xxx"}
     prompt = f"""
@@ -219,7 +212,8 @@ def generate_answer_cot(question, caption, num_frames, use_cache=True):
     return prompt, response
 
 
-def generate_final_answer(question, caption, num_frames, use_cache=True):
+
+def generate_answer_direct(question, caption, num_frames, use_cache=True):
     answer_format = {"final_answer": "xxx"}
     prompt = f"""
     Given a video that has {num_frames} frames, the frames are decoded at 1 fps. Given the following descriptions of the sampled frames in the video:
@@ -237,6 +231,7 @@ def generate_final_answer(question, caption, num_frames, use_cache=True):
     return response
 
 
+
 def summarize_and_qa(video_id, sampled_caps, ann, args):
     summary = summarize_one_video(summarizer, video_id, sampled_caps, \
                                         example_summary, use_cache=args.use_cache, logger=logger)
@@ -245,6 +240,7 @@ def summarize_and_qa(video_id, sampled_caps, ann, args):
     # 后解析 repsonse_dict
     answer, confidnce = postprocess_response_dict(response_dict)
     return answer, confidnce
+
 
 
 def qa_and_reflect(formatted_question, sampled_caps, num_frames, args):
@@ -258,6 +254,7 @@ def qa_and_reflect(formatted_question, sampled_caps, num_frames, args):
     confidence = parse_text_find_confidence(confidence_str, logger)
 
     return answer, confidence
+
 
 
 def choose_ans(s_qa_ans, s_qa_conf, s_conf_lower, \
@@ -278,7 +275,6 @@ def choose_ans(s_qa_ans, s_qa_conf, s_conf_lower, \
             get_ans_step = f"{step}_r_qa"
     
     elif ans_mode == "sr":
-        # 优先 s
         if s_qa_ans != -1 and s_qa_conf >= s_conf_lower:
             answer = s_qa_ans
             get_ans_step = f"{step}_s_qa"
@@ -288,7 +284,6 @@ def choose_ans(s_qa_ans, s_qa_conf, s_conf_lower, \
             get_ans_step = f"{step}_r_qa"
     
     elif ans_mode == "rs":
-        # 优先 r
         if r_qa_ans != -1 and r_qa_conf >= r_conf_lower:
             answer = r_qa_ans
             get_ans_step = f"{step}_r_qa"
@@ -297,7 +292,6 @@ def choose_ans(s_qa_ans, s_qa_conf, s_conf_lower, \
             answer = s_qa_ans
             get_ans_step = f"{step}_s_qa"
 
-    # vote 的关键就是必须两个答案一致才返回
     elif ans_mode == "vote":
         if s_qa_ans == r_qa_ans:
             answer = s_qa_ans
@@ -316,109 +310,10 @@ def choose_ans(s_qa_ans, s_qa_conf, s_conf_lower, \
             get_ans_step = f"{step}_s_r"
 
     else:
-        raise KeyError # 说明参数输错
+        raise KeyError
     
     return answer, get_ans_step
 
-
-# TODO: LLM 直接想象中间哪一帧比较重要，而不是二分插值
-# TODO: 用 CLIP 插帧
-# TODO: 间隔比较大就多插帧，反之，少插帧
-def split_and_reconnect_segments(selected_video_segments, video_segments, for_seg_not_interested, num_frames):
-
-    # TODO 确保 video_segments 一定是有序，无重复的
-
-    new_segments = []
-
-    if for_seg_not_interested == "prune":
-    
-        # 对每个选中的视频切片进行二分
-        for segment in selected_video_segments:
-            
-            if segment.start >= segment.end - 1:
-                # 如果 seg 只有一或两张图片，就不可分了
-                new_segments.append(segment)
-            else:
-                mid_point = (segment.start + segment.end) // 2  # 计算中点
-
-                # 创建两个新的 VideoSeg 实例
-                first_half = VideoSeg(start=segment.start, end=mid_point)
-                second_half = VideoSeg(start=mid_point, end=segment.end)
-                
-                # 将新生成的两个切片添加到结果列表中
-                new_segments.append(first_half)
-                new_segments.append(second_half)
-    
-    elif for_seg_not_interested == "retain":
-
-        for segment in video_segments:
-
-            if segment in selected_video_segments:
-                if segment.start >= segment.end - 1:
-                    # 如果 seg 只有一张图片，就不可分了
-                    new_segments.append(segment)
-                else:
-                    mid_point = (segment.start + segment.end) // 2  # 计算中点
-
-                    # 创建两个新的 VideoSeg 实例
-                    first_half = VideoSeg(start=segment.start, end=mid_point)
-                    second_half = VideoSeg(start=mid_point, end=segment.end)
-                    
-                    # 将新生成的两个切片添加到结果列表中
-                    new_segments.append(first_half)
-                    new_segments.append(second_half)
-            else:
-                new_segments.append(segment)
-
-    elif for_seg_not_interested == "merge":
-        
-        for i, segment in enumerate(selected_video_segments):
-
-            if i == 0:
-                # 把头部那一段连上
-                if segment.start != 1:
-                    video_start_seg = VideoSeg(start=1, end=segment.start)
-                    new_segments.append(video_start_seg)
-
-            # 把之前缺失的若干段 merge 成一个新节点
-            if i != 0 and segment.start != new_segments[-1].end:
-                video_merged_seg = VideoSeg(start=new_segments[-1].end, end=segment.start)
-                new_segments.append(video_merged_seg)
-
-
-            if segment.start >= segment.end - 1:
-                # 如果 seg 只有一张图片，就不可分了
-                new_segments.append(segment)
-            else:
-                mid_point = (segment.start + segment.end) // 2  # 计算中点
-
-                # 创建两个新的 VideoSeg 实例
-                first_half = VideoSeg(start=segment.start, end=mid_point)
-                second_half = VideoSeg(start=mid_point, end=segment.end)
-                
-                # 将新生成的两个切片添加到结果列表中
-                new_segments.append(first_half)
-                new_segments.append(second_half)
-
-            if i == len(selected_video_segments) - 1:
-                # 尾部一段也连上
-                if segment.start != 180:
-                    video_start_seg = VideoSeg(start=segment.end, end=num_frames)
-                    new_segments.append(video_start_seg)
-            
-    else:
-        raise KeyError
-    
-    return new_segments
-
-
-def frame_seg_clip(video_segments, frame_embeddings):
-    new_segments = []
-
-    # frame_embeddings = np.load(f"data/egoschema/ego_features_448/{video_id}.npy")
-
-    for segment in video_segments:
-        seg_frame_embeddings = frame_embeddings[segment.start : segment.end]
 
 
 def select_process(formatted_question, sample_idx, sampled_caps, num_frames, step, 
@@ -428,7 +323,7 @@ def select_process(formatted_question, sample_idx, sampled_caps, num_frames, ste
         i + 1: f"{video_seg.start}-{video_seg.end}"
         for i, video_seg in enumerate(video_segments)
     }
-    # # segment_des: {1: '1-12', 2: '12-23', 3: '23-34', 4: '34-45', ...
+    # segment_des: {1: '1-12', 2: '12-23', 3: '23-34', 4: '34-45', ...
 
     # LLM 决定 segment_des 中哪些片段需要用, 哪些不需要用          
     candidate_descriptions = select_fn(formatted_question, sampled_caps, num_frames, segment_des, args.use_cache)
@@ -530,12 +425,14 @@ def run_one_question(video_id, ann, caps, logs, args):
                 video_segments, sample_idx = \
                     select_process(formatted_question, sample_idx, sampled_caps, num_frames, 
                                    step, args, all_sample_idx, caps, video_segments, select_fn)
+                
         elif args.search_strategy == "dijkstra":
             select_fn = dijkstra_select_one_segment
             for select_iter in range(args.beam_size):
                 video_segments, sample_idx = \
                     select_process(formatted_question, sample_idx, sampled_caps, num_frames, 
                                    step, args, all_sample_idx, caps, video_segments, select_fn)
+                
         elif args.search_strategy == "a_star":
             select_fn = a_star_select_one_segment
             for select_iter in range(args.beam_size):
@@ -553,14 +450,15 @@ def run_one_question(video_id, ann, caps, logs, args):
     # 树搜索完成，进入收尾
     # print(video_id, "final sample num:", len(sample_idx))
 
-    # Post Process 阶段
+    # Post Process
     if answer == -1:
         if args.post_resume_samples:
             sample_idx = list(range(1, num_frames + 1, args.init_interval))     # 从 1 开始，到 num_frames + 1，步长为 interval
-            sample_idx_change_list.append(sample_idx)
-            sampled_caps = read_caption(caps, sample_idx)
         else:
-            sample_idx = all_sample_idx  
+            sample_idx = all_sample_idx
+
+        sample_idx_change_list.append(sample_idx)
+        sampled_caps = read_caption(caps, sample_idx) 
 
 
         if args.post_ans_mode == "s":
@@ -577,25 +475,24 @@ def run_one_question(video_id, ann, caps, logs, args):
                                           r_qa_ans, r_qa_conf, args.post_r_conf_lower, \
                                           args.post_ans_mode, step)
 
-    # final QA，直接强出答案
+    # final direct QA
     if answer == -1:
-        # print("final_direct_qa")
-        answer_str = generate_final_answer(
+        answer_str = generate_answer_direct(
             formatted_question, sampled_caps, num_frames, args.use_cache
         )
         answer = parse_text_find_number(answer_str, logger)
-        get_ans_step = f"final_direct_qa"
+        get_ans_step = f"final_direct_QA"
 
-    # no_ans 处理
+    # no_ans
     if answer == -1:
-        logger.info("Answer Index Not Found!")
-        # answer = random.randint(0, 4)       # 这里需要标记一下具体是哪一个问题错了
-        answer = -1                       
-        print(f"No ans video id: {video_id}") # 把出现错误的 video_id 打印出来
+        logger.info(f"No answer video id: {video_id}")                     
+        print(f"\nNo answer video id: {video_id}\n")
 
+
+    # print_nested_list(sample_idx_change_list)
     logger.info(f"Finished video: {video_id}/{answer}/{ann['truth']}")
     print(f"Finished video: {video_id}/{answer}/{ann['truth']}")
-    # print_nested_list(sample_idx_change_list)
+
 
     label = int(ann["truth"])
     corr = int(label == answer)

@@ -29,7 +29,7 @@ Our TreeVideoAgent does not require many computational resources; it can run on 
 
 3. Set up your API key 🗝️:
 
-   Obtain an OpenAI API key and set your ```OPENAI_API_KEY``` and ```OPENAI_BASE_URL``` as environmental variables in  ```~/.zshrc``` or ```~/.bashrc```. In the ```main.py```, we will use the following codes to obtain the API key and base URL:
+   Obtain an OpenAI API key and set  ```OPENAI_API_KEY``` and ```OPENAI_BASE_URL``` as environmental variables in  ```~/.zshrc``` or ```~/.bashrc```. In the ```main.py```, we will use the following codes to obtain the API key and base URL:
 
    ```
    api_key = os.getenv("OPENAI_API_KEY")
@@ -66,6 +66,8 @@ It will run an automated evaluation scripts and output accuracy and mean frame n
 
 
 
+
+
 For step by step analysis, run:
 
 ```
@@ -77,8 +79,6 @@ python3 analyze_results.py --filepath YOUR_RESULT_JSON_FILE_PATH
 ## TODO:
 
 + 先整理一下 main, eval, analyze 然后根据 analyze 调试 final_step
-
-+ example_summary 和 qa_exmple_summary 什么时候指定
 
 + 解决下面的报错：
 
