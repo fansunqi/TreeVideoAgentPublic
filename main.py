@@ -9,7 +9,7 @@ from model import GPT
 from arg_parser import parse_args
 from summarizer import summarize_one_video, \
       qa_one_video_by_summary, postprocess_response_dict
-from video_seg import *
+from video_seg import VideoSeg, extract_videoseg_from_descriptions, split_and_reconnect_segments
 from arg_parser import parse_args
 
 
@@ -481,7 +481,7 @@ def run_one_question(video_id, ann, caps, logs, args):
             formatted_question, sampled_caps, num_frames, args.use_cache
         )
         answer = parse_text_find_number(answer_str, logger)
-        get_ans_step = f"final_direct_QA"
+        get_ans_step = f"final_direct_qa"
 
     # no_ans
     if answer == -1:

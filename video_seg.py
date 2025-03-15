@@ -1,5 +1,6 @@
 from util import get_duration, get_segment_id
 import pdb
+
 # 视频切片作为树节点
 class VideoSeg:
     def __init__(self, start, end, segment_id=None, description=None):
@@ -73,3 +74,94 @@ def extract_videoseg_from_descriptions(descriptions):
             video_segments.append(video_seg)
     
     return video_segments
+
+
+# TODO: LLM 直接想象中间哪一帧比较重要，而不是二分插值
+# TODO: 用 CLIP 插帧
+# TODO: 间隔比较大就多插帧，反之，少插帧
+def split_and_reconnect_segments(selected_video_segments, video_segments, for_seg_not_interested, num_frames):
+
+    # TODO 确保 video_segments 一定是有序，无重复的
+
+    new_segments = []
+
+    if for_seg_not_interested == "prune":
+    
+        # 对每个选中的视频切片进行二分
+        for segment in selected_video_segments:
+            
+            if segment.start >= segment.end - 1:
+                # 如果 seg 只有一或两张图片，就不可分了
+                new_segments.append(segment)
+            else:
+                mid_point = (segment.start + segment.end) // 2  # 计算中点
+
+                # 创建两个新的 VideoSeg 实例
+                first_half = VideoSeg(start=segment.start, end=mid_point)
+                second_half = VideoSeg(start=mid_point, end=segment.end)
+                
+                # 将新生成的两个切片添加到结果列表中
+                new_segments.append(first_half)
+                new_segments.append(second_half)
+    
+    elif for_seg_not_interested == "retain":
+
+        for segment in video_segments:
+
+            if segment in selected_video_segments:
+                if segment.start >= segment.end - 1:
+                    # 如果 seg 只有一张图片，就不可分了
+                    new_segments.append(segment)
+                else:
+                    mid_point = (segment.start + segment.end) // 2  # 计算中点
+
+                    # 创建两个新的 VideoSeg 实例
+                    first_half = VideoSeg(start=segment.start, end=mid_point)
+                    second_half = VideoSeg(start=mid_point, end=segment.end)
+                    
+                    # 将新生成的两个切片添加到结果列表中
+                    new_segments.append(first_half)
+                    new_segments.append(second_half)
+            else:
+                new_segments.append(segment)
+
+    elif for_seg_not_interested == "merge":
+        
+        for i, segment in enumerate(selected_video_segments):
+
+            if i == 0:
+                # 把头部那一段连上
+                if segment.start != 1:
+                    video_start_seg = VideoSeg(start=1, end=segment.start)
+                    new_segments.append(video_start_seg)
+
+            # 把之前缺失的若干段 merge 成一个新节点
+            if i != 0 and segment.start != new_segments[-1].end:
+                video_merged_seg = VideoSeg(start=new_segments[-1].end, end=segment.start)
+                new_segments.append(video_merged_seg)
+
+
+            if segment.start >= segment.end - 1:
+                # 如果 seg 只有一张图片，就不可分了
+                new_segments.append(segment)
+            else:
+                mid_point = (segment.start + segment.end) // 2  # 计算中点
+
+                # 创建两个新的 VideoSeg 实例
+                first_half = VideoSeg(start=segment.start, end=mid_point)
+                second_half = VideoSeg(start=mid_point, end=segment.end)
+                
+                # 将新生成的两个切片添加到结果列表中
+                new_segments.append(first_half)
+                new_segments.append(second_half)
+
+            if i == len(selected_video_segments) - 1:
+                # 尾部一段也连上
+                if segment.start != 180:
+                    video_start_seg = VideoSeg(start=segment.end, end=num_frames)
+                    new_segments.append(video_start_seg)
+            
+    else:
+        raise KeyError
+    
+    return new_segments
