@@ -1,32 +1,32 @@
 from util import get_duration, get_segment_id
 import pdb
 
-# 视频切片作为树节点
+# Video segment as a tree node
 class VideoSeg:
     def __init__(self, start, end, segment_id=None, description=None):
         """
-        初始化 VideoSeg 对象
+        Initialize VideoSeg object
         
-        :param start: int, 视频切片的起始帧数
-        :param end: int, 视频切片的结尾帧数
-        :param segment_id: int, LLM 标记的视频切片的 ID
-        :param description: str or None, 视频切片的描述（默认为 None）
+        :param start: int, start frame number of the video segment
+        :param end: int, end frame number of the video segment
+        :param segment_id: int, ID of the video segment marked by LLM, dummy
+        :param description: str or None, description of the video segment (default is None), dummy
         """
-        self.start = start              # 起始帧数
-        self.end = end                  # 结束帧数
+        self.start = start            
+        self.end = end                  
 
-        self.segment_id = segment_id    # 无实际作用
-        self.description = description  # 无实际作用
+        self.segment_id = segment_id
+        self.description = description 
 
     def __repr__(self):
         """
-        返回视频切片的简要字符串表示
+        Return a brief string representation of the video segment
         """
         return f"VideoSeg(start={self.start}, end={self.end}, segment_id={self.segment_id}, description={self.description})"
     
     def __eq__(self, other):
         """
-        判断两个 VideoSeg 实例是否相等
+        Check if two VideoSeg instances are equal
         """
         if isinstance(other, VideoSeg):
             return self.start == other.start and self.end == other.end
@@ -35,9 +35,9 @@ class VideoSeg:
 
 def extract_videoseg_from_descriptions(descriptions):
     """
-    根据描述列表提取视频切片实例
+    Extract video segment instances from a list of descriptions
     
-    :param descriptions: List of dictionaries, 每个字典包含 'segment_id', 'duration', 'description' 或 'display_description'
+    :param descriptions: List of dictionaries, each containing 'segment_id', 'duration', 'description' or 'display_description'
     :return: List of VideoSeg instances
     """
     video_segments = []
@@ -47,60 +47,60 @@ def extract_videoseg_from_descriptions(descriptions):
         duration = get_duration(description)
 
         try:
-            start, end = map(int, duration.split('-'))  # 解析 'start-end' 格式
+            start, end = map(int, duration.split('-'))  # Parse 'start-end' format
         except ValueError: 
             print(f"ValueError -- extract_videoseg_from_descriptions -- duration:{duration}")
-            # duration 只有一个数
+            # Duration has only one number
             start = int(duration)
             end = int(duration)
             # pdb.set_trace()
-        # except AttributeError:  # AttributeError: 'NoneType' object(duration) has no attribute 'split'
-        #     print(f"AttributeError -- extract_videoseg_from_descriptions -- description: {description}")
-        #     continue
         except:  # AttributeError: 'NoneType' object(duration) has no attribute 'split'
             print(f"Error -- extract_videoseg_from_descriptions -- description: {description}")
             continue
 
-
         segment_id = get_segment_id(description)
         
-        # 获取描述（优先使用 'description'，如果没有则设置为 None)
+        # Get description (prefer 'description', if not available set to None)
         description = description.get('description', None)
         
-        # 创建 VideoSeg 实例
+        # Create VideoSeg instance
         video_seg = VideoSeg(start, end, segment_id, description)
 
-        if video_seg not in video_segments:  # 防止重复
+        if video_seg not in video_segments:  # Prevent duplicates
             video_segments.append(video_seg)
     
     return video_segments
 
 
-# TODO: LLM 直接想象中间哪一帧比较重要，而不是二分插值
-# TODO: 用 CLIP 插帧
-# TODO: 间隔比较大就多插帧，反之，少插帧
+
 def split_and_reconnect_segments(selected_video_segments, video_segments, for_seg_not_interested, num_frames):
-
-    # TODO 确保 video_segments 一定是有序，无重复的
-
+    """
+    Split and reconnect video segments based on the specified strategy
+    
+    :param selected_video_segments: List of selected video segments
+    :param video_segments: List of all video segments
+    :param for_seg_not_interested: Strategy for segments not interested ("prune", "retain", "merge")
+    :param num_frames: Total number of frames in the video
+    :return: List of new video segments
+    """
     new_segments = []
 
     if for_seg_not_interested == "prune":
     
-        # 对每个选中的视频切片进行二分
+        # Split each selected video segment into two
         for segment in selected_video_segments:
             
             if segment.start >= segment.end - 1:
-                # 如果 seg 只有一或两张图片，就不可分了
+                # If the segment has only one or two frames, it cannot be split
                 new_segments.append(segment)
             else:
-                mid_point = (segment.start + segment.end) // 2  # 计算中点
+                mid_point = (segment.start + segment.end) // 2  # Calculate midpoint
 
-                # 创建两个新的 VideoSeg 实例
+                # Create two new VideoSeg instances
                 first_half = VideoSeg(start=segment.start, end=mid_point)
                 second_half = VideoSeg(start=mid_point, end=segment.end)
                 
-                # 将新生成的两个切片添加到结果列表中
+                # Add the newly created segments to the result list
                 new_segments.append(first_half)
                 new_segments.append(second_half)
     
@@ -110,16 +110,16 @@ def split_and_reconnect_segments(selected_video_segments, video_segments, for_se
 
             if segment in selected_video_segments:
                 if segment.start >= segment.end - 1:
-                    # 如果 seg 只有一张图片，就不可分了
+                    # If the segment has only one frame, it cannot be split
                     new_segments.append(segment)
                 else:
-                    mid_point = (segment.start + segment.end) // 2  # 计算中点
+                    mid_point = (segment.start + segment.end) // 2  # Calculate midpoint
 
-                    # 创建两个新的 VideoSeg 实例
+                    # Create two new VideoSeg instances
                     first_half = VideoSeg(start=segment.start, end=mid_point)
                     second_half = VideoSeg(start=mid_point, end=segment.end)
                     
-                    # 将新生成的两个切片添加到结果列表中
+                    # Add the newly created segments to the result list
                     new_segments.append(first_half)
                     new_segments.append(second_half)
             else:
@@ -130,33 +130,32 @@ def split_and_reconnect_segments(selected_video_segments, video_segments, for_se
         for i, segment in enumerate(selected_video_segments):
 
             if i == 0:
-                # 把头部那一段连上
+                # Connect the initial segment
                 if segment.start != 1:
                     video_start_seg = VideoSeg(start=1, end=segment.start)
                     new_segments.append(video_start_seg)
 
-            # 把之前缺失的若干段 merge 成一个新节点
+            # Merge the missing segments into a new node
             if i != 0 and segment.start != new_segments[-1].end:
                 video_merged_seg = VideoSeg(start=new_segments[-1].end, end=segment.start)
                 new_segments.append(video_merged_seg)
 
-
             if segment.start >= segment.end - 1:
-                # 如果 seg 只有一张图片，就不可分了
+                # If the segment has only one frame, it cannot be split
                 new_segments.append(segment)
             else:
-                mid_point = (segment.start + segment.end) // 2  # 计算中点
+                mid_point = (segment.start + segment.end) // 2  # Calculate midpoint
 
-                # 创建两个新的 VideoSeg 实例
+                # Create two new VideoSeg instances
                 first_half = VideoSeg(start=segment.start, end=mid_point)
                 second_half = VideoSeg(start=mid_point, end=segment.end)
                 
-                # 将新生成的两个切片添加到结果列表中
+                # Add the newly created segments to the result list
                 new_segments.append(first_half)
                 new_segments.append(second_half)
 
             if i == len(selected_video_segments) - 1:
-                # 尾部一段也连上
+                # Connect the final segment
                 if segment.start != 180:
                     video_start_seg = VideoSeg(start=segment.end, end=num_frames)
                     new_segments.append(video_start_seg)

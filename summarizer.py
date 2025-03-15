@@ -81,6 +81,7 @@ def summarize_one_video(summarizer, video_id, sample_caps, \
                                         use_cache=use_cache, logger=logger)
     return response
 
+
 def qa_one_video_by_summary(qa_model, ann, summary, video_id, sample_caps, \
                             example_qa_by_summary, use_cache, logger):
     
@@ -112,6 +113,7 @@ def qa_one_video_by_summary(qa_model, ann, summary, video_id, sample_caps, \
     #     pdb.set_trace()
 
     return response_dict
+
 
 def postprocess_response_dict(response_dict):
 

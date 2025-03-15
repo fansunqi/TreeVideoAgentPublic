@@ -2,9 +2,9 @@
 
 ## News and Todo 🗓️
 
-- [ ] Release Code for Demo
+- [x] Release Code for Demo
 
-- [ ] Release Code for EgoSchema
+- [x] Release Code for EgoSchema
 
 - [ ] Release Code for NExT-QA
 
@@ -69,3 +69,6 @@ python3 analyze_results.py --filepath YOUR_RESULT_JSON_FILE_PATH
 It will output a histogram showing the number of problems solved and the accuracy at each step like this:
 
 <img src="results/egoschema_subset/20250315_162843.png" style="zoom:67%;" />
+
+
+致谢

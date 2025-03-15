@@ -1,6 +1,5 @@
 import os
 import json
-# import matplotlib.pyplot as plt
 from matplotlib import pyplot as plt
 from collections import defaultdict
 from pathlib import Path

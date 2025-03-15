@@ -144,28 +144,3 @@ class GPT(Model):
                 print("Cache Miss")
 
             return self.post_process_fn(info['response']), info
-
-
-if __name__ == "__main__":
-    # args = parse_args()
-    # pprint(args)
-    # # get model
-    # model = get_model(args)
-    # model.set_post_process_fn(prompter.post_process_fn)
-
-    api_key = "sk-T1Jnoi2vQSo4UzAw7c4e64Be4d774778B70416116e745dEd"
-    base_url = "https://api.juheai.top/v1/"
-    model_name = "gpt-4o"
-    summarizer = GPT(api_key=api_key, model_name=model_name, base_url=base_url)
-
-
-    # 设置 system-level prompt 和用户级 prompt 列表
-    head = "You are a helpful assistant."
-    prompt = "What is the capital of France?"
-
-    # 调用 forward 方法获取响应
-    response, info = summarizer.forward(head, prompt)
-
-    # 打印响应和信息
-    print("Response:", response)
-    print("Info:", info)
