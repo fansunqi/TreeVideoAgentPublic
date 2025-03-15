@@ -46,21 +46,27 @@ sh scripts/demo.sh
 
 ## EgoSchema Experiments 🔬
 
-We obtain the dataset annotations and extracted captions from the File [LLoVi](https://drive.google.com/file/d/13M10CB5ePPVlycn754_ff3CwnpPtDfJA/view?usp=drive_link) provide. We have already placed them in ```data/egoschema/```. 
+We obtained the dataset annotations and extracted captions from the File [LLoVi](https://drive.google.com/file/d/13M10CB5ePPVlycn754_ff3CwnpPtDfJA/view?usp=drive_link) provided. We have already placed subset annotations and captions in ```data/egoschema/```. 
 
-If you don't want to cost on OpenAI API, we provide our LLM conversation cache [here](https://drive.google.com/file/d/1c_wId28ozyGEQKd5x3Zl8ugmvDVlJSED/view?usp=sharing) and you can specify the cache path in ```arg_parser.py```.
+If you don't want to pay for the OpenAI API, we provide our LLM conversation cache here. You can specify the cache path in ```arg_parser.py```.
 
-For EgoSchema subset (500 videos), run:
+For the EgoSchema subset (500 videos), run:
 
 ```
 sh scripts/egoschema_subset.sh
 ```
 
-It will run an automated evaluation scripts and output accuracy and mean frame number like this:
+For the EgoSchema fullest, download annotations and captions from [LLoVi](https://drive.google.com/file/d/13M10CB5ePPVlycn754_ff3CwnpPtDfJA/view?usp=drive_link), specify the data path in ```arg_parser.py,``` and run:
+
+```
+sh scripts/egoschema_fullset.sh
+```
+
+The code will run an automated evaluation script and output accuracy and mean frame number like this:
 
 ![](assets/egoschema_results.png)
 
-For step by step analysis, run:
+For step-by-step analysis, run:
 
 ```
 python3 analyze_results.py --filepath YOUR_RESULT_JSON_FILE_PATH
