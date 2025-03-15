@@ -70,5 +70,6 @@ It will output a histogram showing the number of problems solved and the accurac
 
 <img src="results/egoschema_subset/20250315_162843.png" style="zoom:67%;" />
 
+## Acknowledgments
 
-致谢
+We thank the developers of [LLoVi](https://github.com/CeeZh/LLoVi), [VideoTree](https://github.com/Ziyang412/VideoTree), [VideoAgent](https://github.com/wxh1996/VideoAgent) and [HCQA](https://github.com/Hyu-Zhang/HCQA) for their public code release. 

@@ -8,13 +8,13 @@ from util import get_from_cache, save_to_cache
 
 LOG_MAX_LENGTH = 300
 
-# post_process_fn 的一个示例
+# one example for post_process_fn
 def identity(res):
     return res
 
 
 def get_model(args):
-    # 选择不同模型，如 GPT, TogetherAI
+    # choose different LLM, e.g., GPT, TogetherAI
     model_name, temperature = args.model, args.temperature
     base_url = args.openai_proxy if hasattr(args, 'openai_proxy') else None
     print('base_url: ', base_url)
@@ -45,7 +45,7 @@ class GPT(Model):
             openai.base_url = base_url
         self.client = OpenAI(api_key = api_key, base_url = base_url)
         
-    # 在 forward 函数中调用
+    # used in forward()
     def get_response(self, **kwargs):
         try:
             # res = openai.chat.completions.create(**kwargs)
