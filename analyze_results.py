@@ -51,7 +51,7 @@ accuracies = [s['accuracy'] for s in stats]
 
 # 创建图表
 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
-fig.suptitle('Analysis of get_ans_step Distribution and Accuracy', fontsize=14, y=0.95)
+# fig.suptitle('Analysis of get_ans_step Distribution and Accuracy', fontsize=14, y=0.95)
 
 # 绘制样本数量柱状图
 bars1 = ax1.bar(range(len(totals)), totals)

@@ -38,23 +38,17 @@ Our TreeVideoAgent does not require many computational resources; it can run on 
 
 ## QuickStart 🚀
 
-dhued
+We present a case demo by running:
 
 ```
-python main.py --dataset demo --output_base_path results/demo/ --logger_path results/demo/
+sh scripts/demo.sh
 ```
 
+## EgoSchema Experiments 🔬
 
+We obtain the dataset annotations and extracted captions from the File [LLoVi](https://drive.google.com/file/d/13M10CB5ePPVlycn754_ff3CwnpPtDfJA/view?usp=drive_link) provide. We have already placed them in ```data/egoschema/```. 
 
-
-
-0d173aa3-9a94-4ba4-84bc-949d3254a63d
-
-
-
-## EgoSchema Experiments
-
-We obtain the dataset annotations and extracted captions from the File [LLoVi](https://drive.google.com/file/d/13M10CB5ePPVlycn754_ff3CwnpPtDfJA/view?usp=drive_link) provide. We have already placed them in ```data/egoschema/```.
+If you don't want to cost on OpenAI API, we provide our LLM conversation cache [here](https://drive.google.com/file/d/1c_wId28ozyGEQKd5x3Zl8ugmvDVlJSED/view?usp=sharing) and you can specify the cache path in ```arg_parser.py```.
 
 For EgoSchema subset (500 videos), run:
 
@@ -64,9 +58,7 @@ sh scripts/egoschema_subset.sh
 
 It will run an automated evaluation scripts and output accuracy and mean frame number like this:
 
-
-
-
+![](assets/egoschema_results.png)
 
 For step by step analysis, run:
 
@@ -74,101 +66,6 @@ For step by step analysis, run:
 python3 analyze_results.py --filepath YOUR_RESULT_JSON_FILE_PATH
 ```
 
- 
+It will output a histogram showing the number of problems solved and the accuracy at each step like this:
 
-## TODO:
-
-+ 先整理一下 main, eval, analyze 然后根据 analyze 调试 final_step
-
-+ 解决下面的报错：
-
-  ```
-  Traceback (most recent call last):
-    File "/Users/sunqifan/Documents/codes/video_agents/TreeVideoAgentPublic/video_seg.py", line 49, in extract_videoseg_from_descriptions
-      start, end = map(int, duration.split('-'))  # 解析 'start-end' 格式
-      ^^^^^^^^^^
-  ValueError: invalid literal for int() with base 10: 'limit'
-  
-  During handling of the above exception, another exception occurred:
-  
-  Traceback (most recent call last):
-    File "/Users/sunqifan/Documents/codes/video_agents/TreeVideoAgentPublic/main.py", line 677, in <module>
-      main(args)
-      ~~~~^^^^^^
-    File "/Users/sunqifan/Documents/codes/video_agents/TreeVideoAgentPublic/main.py", line 648, in main
-      for _ in tqdm(executor.map(lambda p: run_one_question(*p), tasks), total=len(tasks), desc="Processing"):
-               ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    File "/Users/sunqifan/Documents/codes/video_agents/TreeVideoAgentPublic/tva_env/lib/python3.13/site-packages/tqdm/std.py", line 1181, in __iter__
-      for obj in iterable:
-                 ^^^^^^^^
-    File "/opt/homebrew/Cellar/python@3.13/3.13.2/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/_base.py", line 619, in result_iterator
-      yield _result_or_cancel(fs.pop())
-            ~~~~~~~~~~~~~~~~~^^^^^^^^^^
-    File "/opt/homebrew/Cellar/python@3.13/3.13.2/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/_base.py", line 317, in _result_or_cancel
-      return fut.result(timeout)
-             ~~~~~~~~~~^^^^^^^^^
-    File "/opt/homebrew/Cellar/python@3.13/3.13.2/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/_base.py", line 456, in result
-      return self.__get_result()
-             ~~~~~~~~~~~~~~~~~^^
-    File "/opt/homebrew/Cellar/python@3.13/3.13.2/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/_base.py", line 401, in __get_result
-      raise self._exception
-    File "/opt/homebrew/Cellar/python@3.13/3.13.2/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
-      result = self.fn(*self.args, **self.kwargs)
-    File "/Users/sunqifan/Documents/codes/video_agents/TreeVideoAgentPublic/main.py", line 648, in <lambda>
-      for _ in tqdm(executor.map(lambda p: run_one_question(*p), tasks), total=len(tasks), desc="Processing"):
-                                           ~~~~~~~~~~~~~~~~^^^^
-    File "/Users/sunqifan/Documents/codes/video_agents/TreeVideoAgentPublic/main.py", line 537, in run_one_question
-      select_process(formatted_question, sample_idx, sampled_caps, num_frames,
-      ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-                     step, args, all_sample_idx, caps, video_segments, select_fn)
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    File "/Users/sunqifan/Documents/codes/video_agents/TreeVideoAgentPublic/main.py", line 445, in select_process
-      selected_video_segments = extract_videoseg_from_descriptions(selected_descriptions)
-    File "/Users/sunqifan/Documents/codes/video_agents/TreeVideoAgentPublic/video_seg.py", line 53, in extract_videoseg_from_descriptions
-      start = int(duration)
-  ValueError: invalid literal for int() with base 10: '155-limit'
-  ```
-
-  ```
-  Traceback (most recent call last):
-    File "/Users/sunqifan/Documents/codes/video_agents/TreeVideoAgentPublic/main.py", line 677, in <module>
-      main(args)
-      ~~~~^^^^^^
-    File "/Users/sunqifan/Documents/codes/video_agents/TreeVideoAgentPublic/main.py", line 648, in main
-      for _ in tqdm(executor.map(lambda p: run_one_question(*p), tasks), total=len(tasks), desc="Processing"):
-               ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    File "/Users/sunqifan/Documents/codes/video_agents/TreeVideoAgentPublic/tva_env/lib/python3.13/site-packages/tqdm/std.py", line 1181, in __iter__
-      for obj in iterable:
-                 ^^^^^^^^
-    File "/opt/homebrew/Cellar/python@3.13/3.13.2/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/_base.py", line 619, in result_iterator
-      yield _result_or_cancel(fs.pop())
-            ~~~~~~~~~~~~~~~~~^^^^^^^^^^
-    File "/opt/homebrew/Cellar/python@3.13/3.13.2/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/_base.py", line 317, in _result_or_cancel
-      return fut.result(timeout)
-             ~~~~~~~~~~^^^^^^^^^
-    File "/opt/homebrew/Cellar/python@3.13/3.13.2/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/_base.py", line 456, in result
-      return self.__get_result()
-             ~~~~~~~~~~~~~~~~~^^
-    File "/opt/homebrew/Cellar/python@3.13/3.13.2/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/_base.py", line 401, in __get_result
-      raise self._exception
-    File "/opt/homebrew/Cellar/python@3.13/3.13.2/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
-      result = self.fn(*self.args, **self.kwargs)
-    File "/Users/sunqifan/Documents/codes/video_agents/TreeVideoAgentPublic/main.py", line 648, in <lambda>
-      for _ in tqdm(executor.map(lambda p: run_one_question(*p), tasks), total=len(tasks), desc="Processing"):
-                                           ~~~~~~~~~~~~~~~~^^^^
-    File "/Users/sunqifan/Documents/codes/video_agents/TreeVideoAgentPublic/main.py", line 537, in run_one_question
-      select_process(formatted_question, sample_idx, sampled_caps, num_frames,
-      ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-                     step, args, all_sample_idx, caps, video_segments, select_fn)
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    File "/Users/sunqifan/Documents/codes/video_agents/TreeVideoAgentPublic/main.py", line 445, in select_process
-      selected_video_segments = extract_videoseg_from_descriptions(selected_descriptions)
-    File "/Users/sunqifan/Documents/codes/video_agents/TreeVideoAgentPublic/video_seg.py", line 46, in extract_videoseg_from_descriptions
-      duration = get_duration(description)
-    File "/Users/sunqifan/Documents/codes/video_agents/TreeVideoAgentPublic/util.py", line 160, in get_duration
-      for key in description.keys():
-                 ^^^^^^^^^^^^^^^^
-  AttributeError: 'str' object has no attribute 'keys'
-  ```
-
-  
+<img src="results/egoschema_subset/20250315_162843.png" style="zoom:67%;" />
