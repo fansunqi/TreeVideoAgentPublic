@@ -5,7 +5,6 @@ python main.py --dataset egoschema_subset \
     --logger_base_path results/egoschema_subset/ \
     --example_summary_path data/egoschema/example_summary.txt \
     --example_qa_by_summary_path data/egoschema/example_qa_by_summary.txt \
-    --final_step 5
 
 
 

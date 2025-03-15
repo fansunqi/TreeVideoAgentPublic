@@ -23,7 +23,7 @@ def parse_args():
     parser.add_argument("--logger_base_path", default="results/egoschema_subset/", type=str)
 
     # iteration
-    parser.add_argument("--final_step", default=6, type=int)  
+    parser.add_argument("--final_step", default=5, type=int)  
     parser.add_argument("--init_interval", default=10, type=int, help='measured by seconds')  # 7, 10
     
     # agent ensemble during serach process 
@@ -41,7 +41,7 @@ def parse_args():
     parser.add_argument("--post_r_conf_lower", default=2, type=int, help=">=") # 1,2,3
     parser.add_argument(
         "--post_ans_mode", 
-        default="s", 
+        default="vote", 
         choices=["s", "r", "sr", "rs", "vote", "vote_conf_and", "vote_conf_or"],
         type=str,
         help="s=summarize_and_qa, r=qa_and_reflect")
