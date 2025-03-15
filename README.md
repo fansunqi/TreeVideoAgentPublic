@@ -54,17 +54,29 @@ python main.py --dataset demo --output_base_path results/demo/ --logger_path res
 
 ## EgoSchema Experiments
 
-We obtain the dataset annotations and extracted captions from the File [LLoVi](https://drive.google.com/file/d/13M10CB5ePPVlycn754_ff3CwnpPtDfJA/view?usp=drive_link) provide. We have already placed them in ```data/egoschema```.
+We obtain the dataset annotations and extracted captions from the File [LLoVi](https://drive.google.com/file/d/13M10CB5ePPVlycn754_ff3CwnpPtDfJA/view?usp=drive_link) provide. We have already placed them in ```data/egoschema/```.
+
+For EgoSchema subset (500 videos), run:
 
 ```
-python main.py 
+sh scripts/egoschema_subset.sh
 ```
 
+It will run an automated evaluation scripts and output accuracy and mean frame number like this:
 
 
-2. Xxx
+
+For step by step analysis, run:
+
+```
+python3 analyze_results.py --filepath YOUR_RESULT_JSON_FILE_PATH
+```
+
+ 
 
 ## TODO:
+
++ 先整理一下 main, eval, analyze 然后根据 analyze 调试 final_step
 
 + example_summary 和 qa_exmple_summary 什么时候指定
 

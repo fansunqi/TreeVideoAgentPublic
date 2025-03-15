@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from util import *
 from model import GPT
 from arg_parser import parse_args
-from tools.summarizer import summarize_one_video, \
+from summarizer import summarize_one_video, \
       qa_one_video_by_summary, postprocess_response_dict
 # from tools.utils_clip import get_embeddings, frame_retrieval_seg_ego
 from video_seg import *
@@ -20,11 +20,17 @@ global_args = parse_args()
 # 全局变量 logger 与 timestamp
 set_random_seed(42)
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-logger_path = global_args.logger_path
-logger = set_logger(timestamp, logger_path)
+# logger_path = global_args.logger_path
+logger = set_logger(timestamp, global_args.logger_base_path)
 
 api_key = os.getenv("OPENAI_API_KEY")
 base_url = os.getenv("OPENAI_BASE_URL")
+
+with open(global_args.example_summary_path,'r') as ex:
+    example_summary = ex.read()
+
+with open(global_args.example_qa_by_summary_path,'r') as ex:
+    example_qa_by_summary = ex.read()
 
 # TODO 之后挪到 main 函数中去
 summarizer = GPT(api_key=api_key, model_name=global_args.model_name, temperature=global_args.temperature, base_url=base_url)
@@ -233,9 +239,9 @@ def generate_final_answer(question, caption, num_frames, use_cache=True):
 
 def summarize_and_qa(video_id, sampled_caps, ann, args):
     summary = summarize_one_video(summarizer, video_id, sampled_caps, \
-                                        use_cache=args.use_cache, logger=logger)
+                                        example_summary, use_cache=args.use_cache, logger=logger)
     response_dict = qa_one_video_by_summary(qa_model, ann, summary, video_id, sampled_caps, \
-                                            use_cache=args.use_cache, logger=logger)
+                                            example_qa_by_summary, use_cache=args.use_cache, logger=logger)
     # 后解析 repsonse_dict
     answer, confidnce = postprocess_response_dict(response_dict)
     return answer, confidnce
@@ -609,7 +615,7 @@ def main(args):
     output_result_file = os.path.join(args.output_base_path, f"{timestamp}.json")
 
     anns = json.load(open(args.anno_path, "r"))
-    all_caps = json.load(open(args.data_path, "r"))
+    all_caps = json.load(open(args.cap_path, "r"))
     logs = {}
 
     process_video_ids = list(anns.keys())[:args.process_num]
@@ -654,7 +660,7 @@ def main(args):
         except Exception as e:
 
             # TODO 乱蒙一个
-            
+
             print(f"\nError -- main -- {e}\n")
 
     json.dump(logs, open(output_result_file, "w"))

@@ -4,17 +4,13 @@ def parse_args():
     parser = argparse.ArgumentParser("TreeVideoAgent")
 
     # data
-    parser.add_argument("--dataset", default='egoschema_subset', type=str)  # 'demo', 'egoschema_subset', 'egoschema', 'nextqa', 'nextgqa', 'intentqa'
-
-    # demo
-    parser.add_argument("--demo_info_path", default='data/demo/demo_info.json', type=str)
-
-    # egoschema subset
-    parser.add_argument("--data_path", default='data/egoschema/lavila_subset.json', type=str) 
+    # 'demo', 'egoschema_subset', 'egoschema', 'nextqa', 'nextgqa', 'intentqa'
+    parser.add_argument("--dataset", default='egoschema_subset', type=str)
+    parser.add_argument("--cap_path", default='data/egoschema/lavila_subset.json', type=str) 
     parser.add_argument("--anno_path", default='data/egoschema/subset_anno.json', type=str)
     parser.add_argument("--duration_path", default='data/egoschema/duration.json', type=str) 
 
-    # 调用 LLM 模型信息
+    # LLM 
     # gpt-4-1106-preview, gpt-4o-2024-11-20, o3_mini, DeepSeek-R1, llama-3.3-70b
     parser.add_argument("--model_name", default="gpt-4o-2024-11-20", type=str)
     parser.add_argument("--temperature", default=1.0, type=float)   # 2.0
@@ -24,9 +20,9 @@ def parse_args():
 
     # output / logger
     parser.add_argument("--output_base_path", default="results/egoschema_subset/", type=str)  
-    parser.add_argument("--logger_path", default="results/egoschema_subset/", type=str)
+    parser.add_argument("--logger_base_path", default="results/egoschema_subset/", type=str)
 
-    # 迭代与总结设置
+    # iteration
     parser.add_argument("--final_step", default=6, type=int)  
     parser.add_argument("--init_interval", default=10, type=int, help='measured by seconds')  # 7, 10
     
@@ -59,7 +55,7 @@ def parse_args():
         type=str,
         help="Search strategy to use"
     )
-    parser.add_argument("--beam_size", default=5, type=int)  # 在 bfs 中不使用 # [1,5,10]
+    parser.add_argument("--beam_size", default=5, type=int)  # [1,5,10]
     parser.add_argument(
         "--for_seg_not_interested",
         default="retain",
@@ -68,16 +64,19 @@ def parse_args():
         help="for tree node, i.e., video segment not interested, which strategy to use"
     )
     
-
-
-    # 并行设置
+    # parallel
     parser.add_argument("--max_workers", default=3, type=int, help="Number of parallel workers")
 
-    # 特殊例子
+    # specific video id processing
     parser.add_argument("--process_num", default=500, type=int)
     parser.add_argument("--specific_id", default=None, type=str)
-    parser.add_argument("--specific_id_path", default=None, type=str)  # list 文件的路径
+    parser.add_argument("--specific_id_path", default=None, type=str, help="path to a list json file")
     parser.add_argument("--avoid_id", default=None, type=str)
     parser.add_argument("--reprocess_log", default=None, type=str)
+
+    # in-context learning examples
+    parser.add_argument("--example_summary_path", default="data/egoschema/example_summary.txt", type=str)
+    parser.add_argument("--example_qa_by_summary_path", default="data/egoschema/example_qa_by_summary.txt", type=str)
+
 
     return parser.parse_args()
