@@ -4,7 +4,7 @@ def parse_args():
     parser = argparse.ArgumentParser("TreeVideoAgent")
 
     # data
-    parser.add_argument("--dataset", default='egoschema', type=str)  # 'demo', 'egoschema_subset', 'egoschema', 'nextqa', 'nextgqa', 'intentqa'
+    parser.add_argument("--dataset", default='egoschema_subset', type=str)  # 'demo', 'egoschema_subset', 'egoschema', 'nextqa', 'nextgqa', 'intentqa'
 
     # demo
     parser.add_argument("--demo_info_path", default='data/demo/demo_info.json', type=str)
@@ -18,6 +18,9 @@ def parse_args():
     # gpt-4-1106-preview, gpt-4o-2024-11-20, o3_mini, DeepSeek-R1, llama-3.3-70b
     parser.add_argument("--model_name", default="gpt-4o-2024-11-20", type=str)
     parser.add_argument("--temperature", default=1.0, type=float)   # 2.0
+    # cache: cache_gpt4o, cache_o3mini, cache_deepseekr1.pkl, llama_3.3_70b.pkl
+    parser.add_argument("--cache_path", default="cache/cache_gpt4o.pkl", type=str)
+    parser.add_argument("--use_cache", action='store_false', help="Whether to use llm cache")
 
     # output / logger
     parser.add_argument("--output_base_path", default="results/egoschema_subset/", type=str)  
@@ -25,7 +28,7 @@ def parse_args():
 
     # 迭代与总结设置
     parser.add_argument("--final_step", default=6, type=int)  
-    parser.add_argument("--init_interval", default=10, type=int)
+    parser.add_argument("--init_interval", default=10, type=int, help='measured by seconds')  # 7, 10
     
     # agent ensemble during serach process 
     parser.add_argument("--s_conf_lower", default=3, type=int, help=">=") # 1,2,3,4,5
@@ -65,15 +68,13 @@ def parse_args():
         help="for tree node, i.e., video segment not interested, which strategy to use"
     )
     
-    # cache: cache_gpt4o, cache_o3mini, cache_deepseekr1.pkl, llama_3.3_70b.pkl
-    parser.add_argument("--cache_path", default="cache/cache_gpt4o.pkl", type=str)
-    parser.add_argument("--use_cache", action='store_false', help="Whether to use llm cache")
+
 
     # 并行设置
     parser.add_argument("--max_workers", default=3, type=int, help="Number of parallel workers")
 
     # 特殊例子
-    parser.add_argument("--process_num", default=250, type=int)
+    parser.add_argument("--process_num", default=500, type=int)
     parser.add_argument("--specific_id", default=None, type=str)
     parser.add_argument("--specific_id_path", default=None, type=str)  # list 文件的路径
     parser.add_argument("--avoid_id", default=None, type=str)

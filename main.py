@@ -643,10 +643,19 @@ def main(args):
     ]
 
     # 并发执行任务, 并显示进度条
-    with ThreadPoolExecutor(max_workers=args.max_workers) as executor:
-        # 使用 tqdm 包装 tasks 以显示进度
-        for _ in tqdm(executor.map(lambda p: run_one_question(*p), tasks), total=len(tasks), desc="Processing"):
-            pass
+    # with ThreadPoolExecutor(max_workers=args.max_workers) as executor:
+    #     # 使用 tqdm 包装 tasks 以显示进度
+    #     for _ in tqdm(executor.map(lambda p: run_one_question(*p), tasks), total=len(tasks), desc="Processing"):
+    #         pass
+    
+    for task in tqdm(tasks):
+        try:
+            run_one_question(*task)
+        except Exception as e:
+
+            # TODO 乱蒙一个
+            
+            print(f"\nError -- main -- {e}\n")
 
     json.dump(logs, open(output_result_file, "w"))
 
@@ -680,7 +689,7 @@ if __name__ == "__main__":
         print(f"\ntimestamp: {timestamp}\n")
 
         # eval
-        os.system(f"python3 -m eval.eval2 results/egoschema/ta/ta_subset_{timestamp}.json")
+        os.system(f"python3 eval.py results/{args.dataset}/{timestamp}.json")
 
         # visualize
-        os.system(f"python3 visualize/get_ans_step.py --filename ta_subset_{timestamp}.json")
+        # os.system(f"python3 visualize/get_ans_step.py --filename ta_subset_{timestamp}.json")
