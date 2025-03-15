@@ -48,7 +48,7 @@ sh scripts/demo.sh
 
 We obtained the dataset annotations and extracted captions from the File [LLoVi](https://drive.google.com/file/d/13M10CB5ePPVlycn754_ff3CwnpPtDfJA/view?usp=drive_link) provided. We have already placed subset annotations and captions in ```data/egoschema/```. 
 
-If you don't want to pay for the OpenAI API, we provide our LLM conversation cache here. You can specify the cache path in ```arg_parser.py```.
+If you don't want to pay for the OpenAI API, we provide our LLM conversation cache [here](https://drive.google.com/file/d/1c_wId28ozyGEQKd5x3Zl8ugmvDVlJSED/view?usp=sharing). You can specify the cache path in ```arg_parser.py```.
 
 For the EgoSchema subset (500 videos), run:
 
@@ -66,7 +66,7 @@ The code will run an automated evaluation script and output accuracy and mean fr
 
 ![](assets/egoschema_results.png)
 
-For step-by-step analysis, run:
+For a step-by-step analysis, run:
 
 ```
 python3 analyze_results.py --filepath YOUR_RESULT_JSON_FILE_PATH
