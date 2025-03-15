@@ -358,7 +358,7 @@ def select_process(formatted_question, sample_idx, sampled_caps, num_frames, ste
 def run_one_question(video_id, ann, caps, logs, args):
 
     logger.info(f"Start to process {video_id}")
-    print(f"Start video: {video_id}")
+    print(f"\nStart video: {video_id}")
     
     get_ans_step = None          # which step get the answer
     sample_idx_change_list = []  # change of `sample_idx`
@@ -489,7 +489,7 @@ def run_one_question(video_id, ann, caps, logs, args):
 
     # print_nested_list(sample_idx_change_list)
     logger.info(f"Finished video: {video_id}/{answer}/{ann['truth']}")
-    print(f"Finished video: {video_id}/{answer}/{ann['truth']}")
+    print(f"Finished video: {video_id}/{answer}/{ann['truth']}\n")
 
 
     label = int(ann["truth"])
@@ -556,33 +556,14 @@ def main(args):
     json.dump(logs, open(output_result_file, "w"))
 
 
-def demo(args):
-
-    output_result_file = os.path.join(args.output_base_path, f"{timestamp}.json")
-
-    demo_info = json.load(open(args.demo_info_path, "r"))
-    anns = demo_info["anns"]
-    all_caps = demo_info["all_caps"]
-    
-    logs = {}
-    logger.info("process demo video...")
-                                                                                  
-    run_one_question("demo", anns, all_caps, logs, args)
-    json.dump(logs, open(output_result_file, "w"))
-
-
 if __name__ == "__main__":
     args = parse_args()
     logger.info(args)
 
-    if args.dataset == 'demo':
-        demo(args)
+    main(args)
+    
+    print(args)
+    print(f"\ntimestamp: {timestamp}\n")
 
-    else:
-        main(args)
-        
-        print(args)
-        print(f"\ntimestamp: {timestamp}\n")
-
-        # eval
-        os.system(f"python3 eval.py results/{args.dataset}/{timestamp}.json")
+    # eval
+    os.system(f"python3 eval.py results/{args.dataset}/{timestamp}.json")
