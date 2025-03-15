@@ -237,7 +237,6 @@ def summarize_and_qa(video_id, sampled_caps, ann, args):
                                         example_summary, use_cache=args.use_cache, logger=logger)
     response_dict = qa_one_video_by_summary(qa_model, ann, summary, video_id, sampled_caps, \
                                             example_qa_by_summary, use_cache=args.use_cache, logger=logger)
-    # 后解析 repsonse_dict
     answer, confidnce = postprocess_response_dict(response_dict)
     return answer, confidnce
 
@@ -249,7 +248,6 @@ def qa_and_reflect(formatted_question, sampled_caps, num_frames, args):
     )
     answer = parse_text_find_number(answer_str, logger)                
 
-    # 自己评估自信度
     confidence_str = self_eval(previous_prompt, answer_str, args.use_cache)
     confidence = parse_text_find_confidence(confidence_str, logger)
 
@@ -325,13 +323,13 @@ def select_process(formatted_question, sample_idx, sampled_caps, num_frames, ste
     }
     # segment_des: {1: '1-12', 2: '12-23', 3: '23-34', 4: '34-45', ...
 
-    # LLM 决定 segment_des 中哪些片段需要用, 哪些不需要用          
+    # LLM decides which segment from `segment_des` to use        
     candidate_descriptions = select_fn(formatted_question, sampled_caps, num_frames, segment_des, args.use_cache)
     if candidate_descriptions != None:
         parsed_candidate_descriptions = parse_json(candidate_descriptions)
         selected_descriptions = get_frames_descriptions(parsed_candidate_descriptions)
 
-    # 如果 LLM 没有选出来，就再来一次
+    # re-generate
     max_generate = 5
     generate_count = 0
     while candidate_descriptions == None or selected_descriptions == None:
@@ -342,12 +340,12 @@ def select_process(formatted_question, sample_idx, sampled_caps, num_frames, ste
         parsed_candidate_descriptions = parse_json(candidate_descriptions)
         selected_descriptions = get_frames_descriptions(parsed_candidate_descriptions)
 
-    # 根据 selected_descriptions 提取 VideoSeg 实例
+    # extract `VideoSeg` instance base on selected_descriptions
     selected_video_segments = extract_videoseg_from_descriptions(selected_descriptions)
 
     video_segments = split_and_reconnect_segments(selected_video_segments, video_segments, args.for_seg_not_interested, num_frames)
 
-    # 从 new_segments 列表中提取采样帧，并去重。
+    # extract visible frames from `selected_video_segments``
     sample_idx_set = set()
     for segment in video_segments:
         sample_idx_set.add(segment.start)  
@@ -362,8 +360,8 @@ def run_one_question(video_id, ann, caps, logs, args):
     logger.info(f"Start to process {video_id}")
     print(f"Start video: {video_id}")
     
-    get_ans_step = None          # 统计在哪一步得出答案
-    sample_idx_change_list = []  # 统计 sample_idx 的变化情况 
+    get_ans_step = None          # which step get the answer
+    sample_idx_change_list = []  # change of `sample_idx`
 
     question = ann["question"]
     answers = [ann[f"option {i}"] for i in range(5)]
@@ -374,13 +372,12 @@ def run_one_question(video_id, ann, caps, logs, args):
     )
     num_frames = len(caps)
 
-    # Root node 初始化
-    sample_idx = list(range(1, num_frames + 1, args.init_interval))     # 从 1 开始，到 num_frames + 1，步长为 interval
-    # TODO 可以在这里加上最末尾一帧
-
-    sampled_caps = read_caption(caps, sample_idx)                       # {'frame 1': '#C C pours the water from the bowl', 'frame 45': '#C C puts the sponge in the sink', 'frame 90': '#C C scrubs the plate with the sponge', 'frame 135': '#C C puts the soap bottle on the sink', 'frame 180': '#C C opens the soap bottle'}
+    # root node initialization
+    sample_idx = list(range(1, num_frames + 1, args.init_interval))     
+    sampled_caps = read_caption(caps, sample_idx)                       # e.g. {'frame 1': '#C C pours the water from the bowl', 'frame 45': '#C C puts the sponge in the sink', 'frame 90': '#C C scrubs the plate with the sponge', 'frame 135': '#C C puts the soap bottle on the sink', 'frame 180': '#C C opens the soap bottle'}
     all_sample_idx = sample_idx
-    # 初始化 video_segments 列表
+    
+    # video_segments initialization
     video_segments = []   
     for segment_id in range(1, len(sample_idx)):
         video_seg = VideoSeg(sample_idx[segment_id - 1], sample_idx[segment_id], segment_id, None)
@@ -388,7 +385,9 @@ def run_one_question(video_id, ann, caps, logs, args):
     sample_idx_change_list.append(sample_idx)
     
 
-    # 树搜索主循环 1. LLM QA 2. 选节点分裂
+    # main loop for tree search 
+    # 1. LLM QA 
+    # 2. node expansion
     for step in range(1, args.final_step + 1):
 
         # print(f"{video_id}: step {step}, sample_idx {sample_idx}")
@@ -410,9 +409,9 @@ def run_one_question(video_id, ann, caps, logs, args):
                                           args.ans_mode, step)
 
         if answer != -1:
-            break   # 循环结束
+            break 
         
-        # 2. 选节点分裂
+        # 2. node expansion
         if args.search_strategy == "bfs": 
             select_fn = bfs_select_segments
             video_segments, sample_idx = \
@@ -442,18 +441,17 @@ def run_one_question(video_id, ann, caps, logs, args):
         else:
             raise KeyError
             
-        # 合并到 all_sample_idx
+        # aggregate all `sample_idx` to `all_sample_idx`
         all_sample_idx = sorted(list(set(all_sample_idx + sample_idx)))
         sample_idx_change_list.append(sample_idx)
         sampled_caps = read_caption(caps, sample_idx)
 
-    # 树搜索完成，进入收尾
     # print(video_id, "final sample num:", len(sample_idx))
 
     # Post Process
     if answer == -1:
         if args.post_resume_samples:
-            sample_idx = list(range(1, num_frames + 1, args.init_interval))     # 从 1 开始，到 num_frames + 1，步长为 interval
+            sample_idx = list(range(1, num_frames + 1, args.init_interval))
         else:
             sample_idx = all_sample_idx
 
@@ -496,7 +494,7 @@ def run_one_question(video_id, ann, caps, logs, args):
 
     label = int(ann["truth"])
     corr = int(label == answer)
-    count_frame = len(all_sample_idx)             # 这里计算总共使用了多少帧
+    count_frame = len(all_sample_idx)           
 
     logs[video_id] = {
         "answer": answer,
@@ -517,7 +515,6 @@ def main(args):
 
     process_video_ids = list(anns.keys())[:args.process_num]
 
-    # 特殊处理一个视频
     if args.specific_id != None:  
         specific_video_ids = [args.specific_id]
         process_video_ids = get_intersection(specific_video_ids, list(anns.keys()))
@@ -545,9 +542,8 @@ def main(args):
         for video_id in process_video_ids
     ]
 
-    # 并发执行任务, 并显示进度条
+    # parallel processing
     # with ThreadPoolExecutor(max_workers=args.max_workers) as executor:
-    #     # 使用 tqdm 包装 tasks 以显示进度
     #     for _ in tqdm(executor.map(lambda p: run_one_question(*p), tasks), total=len(tasks), desc="Processing"):
     #         pass
     
@@ -555,9 +551,6 @@ def main(args):
         try:
             run_one_question(*task)
         except Exception as e:
-
-            # TODO 乱蒙一个
-
             print(f"\nError -- main -- {e}\n")
 
     json.dump(logs, open(output_result_file, "w"))
@@ -593,6 +586,3 @@ if __name__ == "__main__":
 
         # eval
         os.system(f"python3 eval.py results/{args.dataset}/{timestamp}.json")
-
-        # visualize
-        # os.system(f"python3 visualize/get_ans_step.py --filename ta_subset_{timestamp}.json")
